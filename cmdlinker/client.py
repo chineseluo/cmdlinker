@@ -2,13 +2,28 @@ import sys
 import argparse
 from cmdlinker import __version__, __description__
 from cmdlinker.builtin.cmd_conf import CmdLinkerCliConf
+from cmdlinker.builtin.analyse import main
 from loguru import logger
 from termcolor import colored
 import pyfiglet
 
 
-def init():
-    ...
+def print_authors_info():
+    figlet_text = pyfiglet.Figlet()
+    color_text = figlet_text.renderText('CmdLinker')
+    print(f"\n{colored(color_text, 'red')}")
+    print(f"""The cmdlinker version is {__version__}
+repository：https://github.com/chineseluo/cmdlinker
+authors：成都-阿木木<848257135@qq.com>
+community（QQ）：816489363""")
+
+
+def init(*args, **kwarg):
+    print_authors_info()
+
+    main(args[0].file_path)
+    # logger.info(*args)
+    # logger.info(args[0].file_path)
 
 
 def init_scaffold_parser(subparsers):
@@ -25,7 +40,7 @@ def init_scaffold_parser(subparsers):
                 sub_scaffold_parser.add_argument(*children_cmd_info["param_name"],
                                                  type=eval(children_cmd_info["type"]), nargs="?",
                                                  help=children_cmd_info["help"],
-                                                 default=eval(children_cmd_info["default"]),
+                                                 default=children_cmd_info["default"],
                                                  dest=children_cmd_info["dest"])
             sub_scaffold_parser_list.append(sub_scaffold_parser)
     return sub_scaffold_parser_list
@@ -48,14 +63,7 @@ def entry():
         sys.exit()
     elif len(cl_argv) == 2:
         if cl_argv[1] in ["-V", "-v", "--Version", "--version"]:
-            figlet_text = pyfiglet.Figlet()
-            color_text = figlet_text.renderText('CmdLinker')
-            print(f"\n{colored(color_text, 'red')}")
-            print(f"""The cmdlinker version is {__version__}
-repository：https://github.com/chineseluo/cmdlinker
-authors：成都-阿木木<848257135@qq.com>
-community（QQ）：816489363""")
-            print(f"")
+            print_authors_info()
         elif cl_argv[1] in ["-h", "-H", "--help", "--Help"]:
             parser.print_help()
         else:

@@ -1,11 +1,10 @@
+from typing import Text
+
 from cmdlinker.builtin.yamlOption import FileOption
 from loguru import logger
 import json
 from cmdlinker.model.models import Entry
 from jinja2 import Template
-
-yaml_data = FileOption.read_yaml("E:\开源项目\CmdLinker\Ost.yaml")
-logger.info(json.dumps(yaml_data, indent=4))
 
 """
 入口检查
@@ -23,13 +22,17 @@ logger.info(json.dumps(yaml_data, indent=4))
 4、 default默认为None
 """
 
-# yaml文件检查
-logger.info("**" * 20 + f"yaml文件合法性检查" + "**" * 20)
-entry = Entry.parse_raw(json.dumps(yaml_data))
-logger.debug(entry)
-logger.info("**" * 20 + f"yaml合法性检查通过" + "**" * 20)
 
-logger.info("==" * 20 + f"生成jinjia2模板渲染对象" + "==" * 20)
+def check_yaml(file_path: Text):
+    yaml_data = FileOption.read_yaml(file_path)
+    logger.info(json.dumps(yaml_data, indent=4))
+    # yaml文件检查
+    logger.info("**" * 20 + f"yaml文件合法性检查" + "**" * 20)
+    entry = Entry.parse_raw(json.dumps(yaml_data))
+    logger.debug(entry)
+    logger.info("**" * 20 + f"yaml合法性检查通过" + "**" * 20)
+    return yaml_data
+
 
 # yaml对象生成
 sub_params_meta = []
@@ -49,10 +52,6 @@ def analyse_entry(meta_data):
     return entry_meta
 
 
-entry_meta = analyse_entry(yaml_data)
-logger.debug(f"解析yaml主命令对象成功：{entry_meta}")
-
-
 def analyse_var(params):
     for parameter in params:
         if "parameters" in parameter:
@@ -67,25 +66,33 @@ def analyse_var(params):
             sub_params_meta.append(parameter)
 
 
-analyse_var(yaml_data["parameters"])
+def main(file_path: Text):
+    yaml_data = check_yaml(file_path)
+    logger.info("==" * 20 + f"生成jinjia2模板渲染对象" + "==" * 20)
+    entry_meta = analyse_entry(yaml_data)
+    logger.debug(f"解析yaml主命令对象成功：{entry_meta}")
+    analyse_var(yaml_data["parameters"])
+    [logger.debug(f"解析yaml子命令对象成功：{parameter}") for parameter in sub_params_meta]
+    logger.info("==" * 20 + f"jinjia2模板渲染对象生成成功" + "==" * 20)
 
-[logger.debug(f"解析yaml子命令对象成功：{parameter}") for parameter in sub_params_meta]
-logger.info("==" * 20 + f"jinjia2模板渲染对象生成成功" + "==" * 20)
+    # 生成命令对象
+    logger.info("==" * 20 + f"开始生成命令对象" + "==" * 20)
+    params_meta = {
+        "entry_params_meta": entry_meta,
+        "sub_params_meta": sub_params_meta
+    }
+    with open('E:\开源项目\CmdLinker\cmdlinker\\builtin\module_template.py.j2', 'r', encoding='utf-8') as f:
+        template = f.read()
+    jinja_template = Template(template)
+    python_code = jinja_template.render(data=params_meta)
+    module_name = f'config_module.py'
+    with open(module_name, 'w', encoding="utf-8") as f:
+        f.write(python_code)
 
-# 生成命令对象
-logger.info("==" * 20 + f"开始生成命令对象" + "==" * 20)
+    # exec(compile(source=open(module_name, encoding="utf-8").read(), filename=module_name, mode='exec'))
+    # logger.info(f"code:{code}")
+    logger.info("==" * 20 + f"生成命令对象成功" + "==" * 20)
 
-params_meta = {
-    "entry_params_meta": entry_meta,
-    "sub_params_meta": sub_params_meta
-}
-with open('E:\开源项目\CmdLinker\cmdlinker\\builtin\module_template.py.j2', 'r', encoding='utf-8') as f:
-    template = f.read()
-jinja_template = Template(template)
-python_code = jinja_template.render(data=params_meta)
-module_name = f'config_module.py'
-with open(module_name, 'w', encoding="utf-8") as f:
-    f.write(python_code)
 
-exec(compile(source=open(module_name, encoding="utf-8").read(), filename=module_name, mode='exec'))
-logger.info("==" * 20 + f"生成命令对象成功" + "==" * 20)
+if __name__ == '__main__':
+    main("E:\开源项目\CmdLinker\Ost.yaml")

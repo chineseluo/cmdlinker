@@ -5,15 +5,15 @@ parameters:
       help: "启动CmdLinker生成命令对象文件"
       default: "None"
       func: "init"
-#      children_cmd:
-#        - param_name:
-#            - '-f'
-#            - '-file'
-#            - '--file_path'
-#          type: "str"
-#          help: "yaml文件路径"
-#          default: "./"
-#          dest: "file_path"
+      children_cmd:
+        - param_name:
+            - '-f'
+            - '-file'
+            - '--file_path'
+          type: "str"
+          help: "yaml文件路径"
+          default: ""
+          dest: "file_path"
   # 计划操作命令
 #  - parent_cmd:
 #      param_name: "plan_load"

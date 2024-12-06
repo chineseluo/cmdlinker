@@ -13,8 +13,20 @@ class TestCmd(unittest.TestCase):
             entry()
         self.assertEqual(cm.exception.code, 0)
 
-    def test_plan_load_help(self):
-        sys.argv = ["Tk", "plan_load", "-h"]
+    def test_help(self):
+        sys.argv = ["CmdLinker", "-h"]
+        with self.assertRaises(SystemExit) as cm:
+            entry()
+        self.assertEqual(cm.exception.code, 0)
+
+    def test_init_help(self):
+        sys.argv = ["CmdLinker", "init", "-h"]
+        with self.assertRaises(SystemExit) as cm:
+            entry()
+        self.assertEqual(cm.exception.code, 0)
+
+    def test_init(self):
+        sys.argv = ["CmdLinker", "init"]
         with self.assertRaises(SystemExit) as cm:
             entry()
         self.assertEqual(cm.exception.code, 0)

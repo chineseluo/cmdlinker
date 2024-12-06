@@ -1,25 +1,22 @@
 import sys
+import time
 from time import sleep
 from tqdm import tqdm
 
-# 字符画的高度
-height = 10
 
-# 字符画的宽度
-width = 20
+def ccc():
+    print("###")
+    # time.sleep(5)
 
-# 字符画的字符集
-chars = [' ', '.', '"', '^', '*', ':', '=', '!', '+', 'i', '>', ',', '<', '?', '&', '#']
-
-
-def generate_ascii_art(height, width, chars):
-    for _ in tqdm(range(height), file=sys.stdout, ncols=100, desc='Generating ASCII Art'):
-        line = ''.join(random.choice(chars) for _ in range(width))
-        print(line)
+def generate_ascii_art(height=10):
+    for _ in tqdm(range(height), file=sys.stdout, ncols=100, desc='Generating CMD object'):
+        # line = ''.join(random.choice(chars) for _ in range(width))
+        # print(line)
+        ccc()
         sleep(0.1)  # 用于控制输出速度，减少闪烁
 
 
 if __name__ == "__main__":
     import random
 
-    generate_ascii_art(height, width, chars)
+    generate_ascii_art(height)
