@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "cmdlinker"
+version = "0.1.0"
+description = "用于解析命令/执行命令，将命令解析成py对象，在进行命令操作时，直接操作命令对象即可，可用于命令自动化测试，中间件测试，linux测试，云原生测试，云计算测试等"
+authors = ["chineseluo <848257135@qq.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
+CL = "cmdlinker.client:entry"
+cl = "cmdlinker.client:entry"
+cmdliner = "cmdlinker.client:entry"
+CmdLiner = "cmdlinker.client:entry"

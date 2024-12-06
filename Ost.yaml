@@ -1,0 +1,35 @@
+entry: "OST"
+mapping_entry: "ost"
+module_name: "Ost"
+class_name: "ost"
+out_path: "./"
+parameters:
+  -   mapping_name: "run"
+      original_cmd: "-run_it"
+      value: True # 是否需要值
+      mutex: False # 是否互斥
+      default: None
+      parameters:
+        - mapping_name: "port"
+          original_cmd: "-port"
+          value: True # 是否需要值
+          mutex: False # 是否互斥
+          default: "8080"
+          parameters:
+            - mapping_name: "desc"
+              original_cmd: "-desc"
+              value: True # 是否需要值
+              mutex: False # 是否互斥
+              default: "desc"
+        - mapping_name: "host"
+          original_cmd: "-host"
+          value: True # 是否需要值
+          mutex: False # 是否互斥
+          default: "www.baidu.com"
+
+  # 计划操作命令
+  -   mapping_name: "plan_load"
+      original_cmd: "-plan_load"
+      value: True
+      mutex: False
+      default:

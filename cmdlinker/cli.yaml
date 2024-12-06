@@ -1,0 +1,32 @@
+parameters:
+  - parent_cmd:
+      param_name: "init"
+      type: "str"
+      help: "启动CmdLinker生成命令对象文件"
+      default: "None"
+      func: "init"
+#      children_cmd:
+#        - param_name:
+#            - '-f'
+#            - '-file'
+#            - '--file_path'
+#          type: "str"
+#          help: "yaml文件路径"
+#          default: "./"
+#          dest: "file_path"
+  # 计划操作命令
+#  - parent_cmd:
+#      param_name: "plan_load"
+#      type: "str"
+#      help: "从配置文件中加载测试计划，支持yaml/json格式"
+#      default: "None"
+#      func: "plan_load"
+#      children_cmd:
+#        - param_name:
+#            - '-f'
+#            - '-file'
+#            - '--file'
+#          type: "str"
+#          help: "测试文件名称，支持yaml/json格式"
+#          default: "None"
+#          dest: "file"

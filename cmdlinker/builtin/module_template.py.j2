@@ -1,0 +1,201 @@
+from loguru import logger
+from typing import Union
+
+class Counter:
+    index = 0
+
+
+class CMDS:
+    CMD_LIST = []
+
+
+
+
+class OstCmd:
+    def __init__(self):
+        self.meta_data = None
+        self.mutex = None
+        self.need_value = None
+        self.has_child_cmd = None
+        self.gc = None
+        self.child_cmd = None
+        self.default_value = None
+        self.value = None
+        self.mark = None
+        self.index = None
+        self.level = 0
+        self._mutexs = []
+        self._gcs = []
+        self._not_mutexs = []
+        self.main_cmd = "OST"
+        self.pre: object = object
+        self.root: object = object
+        self.next: Union[object] = object
+
+    def _exclude(self, cmd_obj):
+        if not cmd_obj.mark:
+            logger.debug(f"命令对象：{cmd_obj.__class__.__name__}未被使用")
+            return False
+        else:
+            return True
+
+    def _get_execute_cmd(self, cmd_obj):
+        if cmd_obj.need_value:
+            return f"{cmd_obj.meta_data['original_cmd']} {cmd_obj.value}"
+        else:
+            return f"{cmd_obj.meta_data['original_cmd']}"
+
+    def ost_engine(self, log_desc=""):
+        start_log_desc = '' if self.next == self else self.next.__class__.__name__
+        logger.info("=="*20+f"开启{start_log_desc} {log_desc}命令{self.__class__.__name__}合法性检查"+"=="*20)
+        for cmd_obj_str in vars(self).keys():
+            cmd_obj = getattr(self, cmd_obj_str)
+            if isinstance(cmd_obj, OstCmd):
+                if cmd_obj_str == "next":
+                    continue
+                if not self._exclude(cmd_obj):
+                    continue
+                if cmd_obj.mutex:
+                    self._mutexs.append(cmd_obj)
+                    logger.debug(f"命令对象：{self.__class__.__name__} 注入互斥对象：{cmd_obj},最新互斥列表对象列表为：{self._mutexs}")
+                else:
+                    self._not_mutexs.append(cmd_obj)
+                    logger.debug(f"命令对象：{self.__class__.__name__} 注入非互斥对象：{cmd_obj}，最新非互斥列表对象列表为：{self._not_mutexs}")
+
+        if len(self._mutexs) > 1:
+            logger.error(f"命令对象：{self.__class__.__name__} 含有多个互斥对象，请检查：{self._mutexs}")
+            raise Exception
+        if len(self._mutexs) != 0 and len(self._not_mutexs) != 0:
+            logger.error(f"命令对象：{self.__class__.__name__} 除全局命令外，不能同时存在互斥和非互斥命令，请检查：{self._mutexs},{self._not_mutexs}")
+            logger.error("==" * 20 + f"命令{self.__class__.__name__}合法性检查不通过" + "==" * 20)
+            raise Exception
+
+        if self.pre == self.root:
+            logger.debug(f"启用命令对象{self.__class__.__name__} root 命令: {self.root.__class__.__name__} 检查")
+            self.root.ost_engine(log_desc="root")
+            self.root._not_mutexs = []
+            self.root._mutexs = []
+            logger.debug(f"清理命令对象{self.__class__.__name__} root 命令: {self.root.__class__.__name__}互斥与否检查数据")
+        else:
+            logger.debug(f"启用命令对象{self.__class__.__name__} pre 命令: {self.pre.__class__.__name__} 检查")
+
+            self.pre.ost_engine(log_desc="pre")
+            self.pre._not_mutexs = []
+            self.pre._mutexs = []
+            logger.debug(f"清理命令对象{self.__class__.__name__}父命令: {self.pre.__class__.__name__}互斥与否检查数据")
+        logger.info("=="*20+f"命令{self.next.__class__.__name__} {log_desc}合法性检查通过"+"=="*20)
+
+{% for sub_param in data.sub_params_meta %}
+
+class {{sub_param.mapping_name.title()}}(OstCmd):
+    def __init__(self, root_obj, pre_obj):
+        super().__init__()
+        self.pre: Ost = pre_obj
+        self.root: Ost = root_obj
+        self.next: Union[{{sub_param.mapping_name.title()}}] = self
+        self.meta_data = {{sub_param}}
+        self.level = 2
+        self.mutex = {{sub_param.mutex}}
+        self.need_value = {{sub_param.value}}
+        self.has_child_cmd = {{sub_param.has_child_cmd}}
+        self.child_cmds = {{sub_param.child_cmds}}
+        self.gc = False
+        {% for child_cmd in sub_param.child_cmds %}
+        self._{{child_cmd}}: {{child_cmd.title()}} = {{child_cmd.title()}}(root_obj, self)
+        {% endfor %}
+        self.default_value = {% if sub_param.default is string %} "{{sub_param.default}}" {% else %} {{sub_param.default}} {% endif %}
+        self.value = self.default_value
+        self.mark = False
+        self._index = 0
+    {% for child_cmd in sub_param.child_cmds %}
+    def set_{{child_cmd}}(self, value=None):
+        self._{{child_cmd}}.mark = True
+        self._{{child_cmd}}.index = Counter.index
+        Counter.index += 1
+        self.next = self._port
+        self._{{child_cmd}}.ost_engine()
+        CMDS.CMD_LIST.append(self._port)
+        if self._{{child_cmd}}.need_value:
+            self._{{child_cmd}}.value = value
+            return self._{{child_cmd}}
+        else:
+            return self._{{child_cmd}}
+
+    def {{child_cmd}}(self) -> {{child_cmd.title()}}:
+        return self._{{child_cmd}}
+    {% endfor %}
+
+
+{% endfor %}
+
+class {{data.entry_params_meta.mapping_entry.title()}}:
+
+    def __init__(self):
+        self.pre: object = None
+        self.root: {{data.entry_params_meta.class_name.title()}} = self
+        self.next: Union[{% for sub_param in data.entry_params_meta.child_cmds %} {{sub_param.title()}},{% endfor %}] = None
+        self.counter = Counter.index
+        self.main_cmd = "{{data.CmdEntry}}"
+        self._mutexs = []
+        self._gcs = []
+        self._not_mutexs = []
+        {% for child_cmd in data.entry_params_meta.child_cmds %}
+        self._{{ child_cmd }}:{{child_cmd.title()}} = {{child_cmd.title()}}(self,self)
+        {% endfor %}
+    {% for child_cmd in data.entry_params_meta.child_cmds %}
+    def set_{{child_cmd}}(self, value=None):
+        self._{{child_cmd}}.mark = True
+        self._{{child_cmd}}.index = Counter.index
+        Counter.index += 1
+        self.next = self._run
+        CMDS.CMD_LIST.append(self._{{child_cmd}})
+
+        self._{{child_cmd}}.ost_engine()
+        if self._{{child_cmd}}.need_value:
+            self._{{child_cmd}}.value = value
+        return self._{{child_cmd}}
+    {% endfor %}
+
+    {% for child_cmd in data.entry_params_meta.child_cmds %}
+    def {{child_cmd}}(self) -> {{child_cmd.title()}}:
+        return self._{{child_cmd}}
+    {% endfor %}
+
+    def _exclude(self, cmd_obj):
+        if not cmd_obj.mark:
+            logger.debug(f"命令对象：{cmd_obj.__class__.__name__}未被使用")
+            return False
+        else:
+            return True
+
+    def _get_execute_cmd(self, cmd_obj):
+        if cmd_obj.need_value:
+            return f"{cmd_obj.meta_data['original_cmd']} {cmd_obj.value}"
+        else:
+            return f"{cmd_obj.meta_data['original_cmd']}"
+
+    def ost_engine(self, log_desc=""):
+        for cmd_obj_str in vars(self).keys():
+            cmd_obj = getattr(self, cmd_obj_str)
+            if isinstance(cmd_obj, OstCmd):
+                if cmd_obj_str == "next":
+                    continue
+                if not self._exclude(cmd_obj):
+                    continue
+                if cmd_obj.mutex:
+                    self._mutexs.append(cmd_obj)
+                    logger.debug(f"{self.main_cmd}添加互斥对象：{cmd_obj},最新互斥对象列表：{{self._mutexs}}")
+                else:
+                    self._not_mutexs.append(cmd_obj)
+                    logger.debug(f"{self.main_cmd}添加非互斥对象：{cmd_obj},最新非互斥对象列表：{self._not_mutexs}")
+        if len(self._mutexs) > 1:
+            logger.error(f"含有多个互斥对象，请检查：{self._mutexs}")
+            raise Exception
+        if len(self._mutexs) != 0 and len(self._not_mutexs) != 0:
+            logger.error(f"除全局命令，不能同时存在互斥和非互斥命令，请检查：{self._mutexs},{self._not_mutexs}")
+            logger.error("==" * 20 + f"命令{self.__class__.__name__}合法性检查不通过" + "==" * 20)
+            raise Exception
+        logger.debug(f"解析命令列表前排序：{CMDS.CMD_LIST}")
+        CMDS.CMD_LIST.sort(key=lambda cmd_obj: cmd_obj.index)
+        logger.debug(f"解析命令列表后排序：{CMDS.CMD_LIST}")
+        logger.info(f"执行命令列表：{[self.main_cmd] + [self._get_execute_cmd(cmd) for cmd in CMDS.CMD_LIST]}")
