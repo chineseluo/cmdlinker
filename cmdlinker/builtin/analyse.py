@@ -40,7 +40,8 @@ sub_params_meta = []
 
 
 def analyse_entry(meta_data):
-    child_cmds = [parameter["mapping_name"] for parameter in meta_data["parameters"]]
+    child_cmds = [{"name": parameter["mapping_name"], "value": parameter["value"]} for
+                                             parameter in meta_data["parameters"]]
     entry_meta = {
         "entry": meta_data["entry"],
         "mapping_entry": meta_data["mapping_entry"],
@@ -48,8 +49,19 @@ def analyse_entry(meta_data):
         "class_name": meta_data["class_name"],
         "out_path": meta_data["out_path"],
         "has_child_cmd": False if len(child_cmds) == 0 else True,
-        "child_cmds": child_cmds
+        "child_cmds": child_cmds,
+        "mode": meta_data["mode"].upper()
     }
+
+    if meta_data["mode"].upper() == "SSH":
+        ssh_conf = meta_data.get("ssh_conf", None)
+        entry_meta.update({"ssh_conf": {
+            "host": ssh_conf["ssh_host"] if ssh_conf else None,
+            "name": ssh_conf["ssh_name"] if ssh_conf else None,
+            "pwd": ssh_conf["ssh_pwd"] if ssh_conf else "22",
+            "port": ssh_conf["ssh_port"] if ssh_conf else None,
+            "sudo": ssh_conf["sudo"] if ssh_conf else False
+        }})
     return entry_meta
 
 
@@ -59,12 +71,9 @@ def analyse_var(params, parent_cmd, root_cmd):
             parameter.update({"has_child_cmd": True})
             parameter.update({"parent_cmd": parent_cmd})
             parameter.update({"root_cmd": root_cmd})
-            parameter.update({"child_cmds": [parameter["mapping_name"] for parameter in parameter["parameters"]]})
-            # if parameter["mapping_name"] == "run":
-            #     logger.info(parameter)
-            #     time.sleep(30)
+            parameter.update({"child_cmds": [{"name": parameter["mapping_name"], "value": parameter["value"]} for
+                                             parameter in parameter["parameters"]]})
             analyse_var(parameter["parameters"], parameter["mapping_name"], root_cmd)
-
             del parameter["parameters"]
             sub_params_meta.append(parameter)
         else:

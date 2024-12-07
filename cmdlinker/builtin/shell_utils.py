@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-File Name：     shell_utils
-Description :   大自然的搬运工 来源云平台工程
-Author :        chenjingli
-date：          2020/9/17
--------------------------------------------------
-"""
 import sys
 import subprocess
 from loguru import logger
@@ -102,12 +95,6 @@ class ShellClient:
         return run_cmd(cmd, print_fun, timeout)
 
     @staticmethod
-    # 通过免密的方式执行shell 命令为了Jenkins前段显示
-    def run_cmd_by_sshpass(cmd_list=list(), user_name=HostInfo.USER_NAME_BY_ROOT,
-                           password=HostInfo.PASSWORD, host='', print_fun=default_print_fun, action=None):
-        return run_cmd_by_sshpass(cmd_list, user_name, password, host, print_fun, action)
-
-    @staticmethod
     def start_cmd(cmd, print_fun=default_print_fun, encoding='utf-8'):
         return LocalProcess(cmd, print_fun, encoding)
 
@@ -167,5 +154,4 @@ class LocalProcess:
 
 
 if __name__ == '__main__':
-    ShellClient.run_cmd_by_no_password(cmd_list=['cd /tmp', 'spadmin upgrader version'], password='pbwNPOlkWj',
-                                       host='10.120.40.51')
+    ...

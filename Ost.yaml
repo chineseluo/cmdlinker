@@ -1,35 +1,42 @@
-entry: "OST"
-mapping_entry: "ost"
-module_name: "Ost"
-class_name: "ost"
+entry: "ls"
+mapping_entry: "Ls"
+module_name: "ls"
+class_name: "ls"
 out_path: "./"
+mode: "SSH"
+ssh_conf:
+  sudo: False
+  ssh_host: "47.97.37.176"
+  ssh_name: "root"
+  ssh_pwd: "xxx"
+  ssh_port: 22
 parameters:
-  -   mapping_name: "run"
-      original_cmd: "-run"
-      value: True # 是否需要值
+  -   mapping_name: "l"
+      original_cmd: "-l"
+      value: False # 是否需要值
       mutex: False # 是否互斥
       default: None
-      parameters:
-        - mapping_name: "port"
-          original_cmd: "-port"
-          value: True # 是否需要值
-          mutex: False # 是否互斥
-          default: "8080"
-          parameters:
-            - mapping_name: "desc"
-              original_cmd: "-desc"
-              value: True # 是否需要值
-              mutex: False # 是否互斥
-              default: "desc"
-        - mapping_name: "host"
-          original_cmd: "-host"
-          value: True # 是否需要值
-          mutex: False # 是否互斥
-          default: "www.baidu.com"
-
-  # 计划操作命令
-  -   mapping_name: "plan_load"
-      original_cmd: "-plan_load"
-      value: True
-      mutex: False
-      default:
+#      parameters:
+#        - mapping_name: "port"
+#          original_cmd: "-port"
+#          value: True # 是否需要值
+#          mutex: False # 是否互斥
+#          default: "8080"
+#          parameters:
+#            - mapping_name: "desc"
+#              original_cmd: "-desc"
+#              value: True # 是否需要值
+#              mutex: False # 是否互斥
+#              default: "desc"
+#        - mapping_name: "host"
+#          original_cmd: "-host"
+#          value: True # 是否需要值
+#          mutex: False # 是否互斥
+#          default: "www.baidu.com"
+#
+#  # 计划操作命令
+#  -   mapping_name: "plan_load"
+#      original_cmd: "-plan_load"
+#      value: True
+#      mutex: False
+#      default:

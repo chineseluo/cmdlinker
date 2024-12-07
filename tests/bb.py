@@ -19,4 +19,4 @@ def generate_ascii_art(height=10):
 if __name__ == "__main__":
     import random
 
-    generate_ascii_art(height)
+    ...

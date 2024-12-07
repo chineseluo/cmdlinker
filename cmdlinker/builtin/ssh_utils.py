@@ -1,25 +1,36 @@
 # -*- coding: utf-8 -*-
-"""
-File Name：     ssh_utils
-Description :   大自然搬运工 继续搬 封装了paramiko的ssh-client
-Author :        chenjingli
-date：          2020/9/22
--------------------------------------------------
-"""
 import os
 import paramiko
 import tempfile
 import datetime
-
+import sys
 from cmdlinker.builtin import shell_utils
 from loguru import logger
 from cmdlinker.const import HostInfo
 
-default_print_fun = shell_utils.default_print_fun
+
+# default_print_fun = shell_utils.default_print_fun
+def default_print_fun(x):
+    print(x, file=sys.stderr)
+
+
+def info_log(host, cmd, status_code, stdout, stderr):
+    def _out_info(message):
+        return f"""
+execute cmd on host:{host}
+execute cmd:{cmd}
+status_code:{status_code}
+response:\n{message}
+        """
+
+    if status_code == 0:
+        logger.info(_out_info(stdout))
+    else:
+        logger.error(_out_info(stderr))
 
 
 class SSHClient(object):
-    def __init__(self, host, name=HostInfo.USER_NAME_BY_ROOT, password=HostInfo.PASSWORD, encoding='utf8', port=22):
+    def __init__(self, host, name=HostInfo.USER_NAME_BY_ROOT, password=HostInfo.PASSWORD, port=22, encoding='utf8'):
         self.host = host
         self.params = {'hostname': host, 'port': port}
         if name:
@@ -31,14 +42,7 @@ class SSHClient(object):
         self.is_connected = False
 
     def __repr__(self):
-        return 'SSHClient(host=%s)' % self.host
-
-    def sa_ssh_client_init(self):
-        sa_password = self.run_cmd("cat /home/sa_cluster/.sa_password")['stderr']
-        if sa_password is None:
-            raise Exception("获取sa_cluster密码失败")
-        sa_ssh_client = SSHClient(self.host, name="sa_cluster", password=sa_password)
-        return sa_ssh_client
+        return f'SSHClient(host={self.host})'
 
     def check_connect(self):
         '''主要保证构造函数不要抛异常'''
@@ -49,15 +53,14 @@ class SSHClient(object):
         self.client.connect(**self.params)
         self.is_connected = True
 
-    def run_cmd(self, cmd, print_fun=default_print_fun, timeout=1800):
+    def run_cmd(self, cmd, timeout=1800):
         self.check_connect()
         stdin_fd, stdout_fd, stderr_fd = self.client.exec_command(cmd, timeout=timeout)
         # 会阻塞
-        ret = stdout_fd.channel.recv_exit_status()  # status is 0
-        stderr, stdout = stdout_fd.read().decode(self.encoding), stderr_fd.read().decode(self.encoding)
-        print_fun("======")
-        print_fun("cmd on %s:\n%s\n\nret:%d\n\nstdout:\n%s\n\nstderr:\n%s\n\n" % (self.host, cmd, ret, stdout, stderr))
-        return {'ret': ret, 'stdout': stdout, 'stderr': stderr}
+        status_code = stdout_fd.channel.recv_exit_status()  # status is 0
+        stdout, stderr = stdout_fd.read().decode(self.encoding), stderr_fd.read().decode(self.encoding)
+        info_log(self.host, cmd, status_code, stdout, stderr)
+        return {'status_code': status_code, 'stdout': stdout, 'stderr': stderr}
 
     def run_cmd_output_console(self, cmd, print_fun=default_print_fun, timeout=36000):
         import datetime
@@ -107,7 +110,8 @@ class SSHClient(object):
         :param timeout:
         :return:
         """
-        logger.info("将本地的文件拷贝到远程服务器上，本地文件路径为：{}，远程服务器文件路径为：{}".format(local_file, remote_file))
+        logger.info(
+            "将本地的文件拷贝到远程服务器上，本地文件路径为：{}，远程服务器文件路径为：{}".format(local_file, remote_file))
         self.check_connect()
         # 1. 拷贝文件
         sftp = paramiko.SFTPClient.from_transport(self.client.get_transport())
@@ -151,7 +155,8 @@ class SSHClient(object):
         :param timeout:
         :return:
         """
-        logger.info("将远程服务器的文件拷贝到本地，远程服务器文件路径为：{}，文件路径为：{}".format(remote_file, local_file))
+        logger.info(
+            "将远程服务器的文件拷贝到本地，远程服务器文件路径为：{}，文件路径为：{}".format(remote_file, local_file))
         self.check_connect()
         # 1. 拷贝文件
         sftp = paramiko.SFTPClient.from_transport(self.client.get_transport())
@@ -254,11 +259,4 @@ class SSHProcess:
 
 
 if __name__ == '__main__':
-    client = SSHClient('10.120.32.239', name='sa_cluster', password='3keFWuBVyq')
-    # print(client.run_cmd('su - sa_cluster'))
-    # print(client.run_cmd('rpm -i /sensorsdata/metadata/sa_ins/sensors-platform-install-1.18.2676-centos7/packages/gdb-*.rpm --force'))
-    # print(client.run_cmd('wget http://gitlab.internal.sensorsdata.cn/qa/auto_test/-/blob/master/common_tools/check_result/check_return_value.py'))
-    # print(client.run_cmd('ps -ef|grep java'))
-    # client.check_call('cd /data')
-    # client.su_sa_cluster()
-    # print(client.run_cmd('whoami'))
+    client = SSHClient('10.120.32.239', name='root', password='3keFWuBVyq')

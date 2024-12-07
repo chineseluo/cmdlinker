@@ -85,86 +85,65 @@ class OstCmd:
             logger.debug(f"清理命令对象{self.__class__.__name__}父命令: {self.pre.__class__.__name__}互斥与否检查数据")
         logger.info("=="*20+f"命令{self.next.__class__.__name__} {log_desc}合法性检查通过"+"=="*20)
 
-{% for sub_param in data.sub_params_meta %}
 
-class {{sub_param.mapping_name.title()}}(OstCmd):
+
+class L(OstCmd):
     def __init__(self, root_obj, pre_obj):
         super().__init__()
-        self.pre: {{sub_param.parent_cmd.title()}} = pre_obj
-        self.root: {{sub_param.root_cmd.title()}} = root_obj
-        self.next: Union[{{sub_param.mapping_name.title()}}] = self
-        self.meta_data = {{sub_param}}
+        self.pre: Ls = pre_obj
+        self.root: Ls = root_obj
+        self.next: Union[L] = self
+        self.meta_data = {'mapping_name': 'l', 'original_cmd': '-l', 'value': False, 'mutex': False, 'default': 'None', 'has_child_cmd': False, 'child_cmds': [], 'parent_cmd': 'Ls', 'root_cmd': 'Ls'}
         self.level = 2
-        self.mutex = {{sub_param.mutex}}
-        self.need_value = {{sub_param.value}}
-        self.has_child_cmd = {{sub_param.has_child_cmd}}
-        self.child_cmds = {{sub_param.child_cmds}}
+        self.mutex = False
+        self.need_value = False
+        self.has_child_cmd = False
+        self.child_cmds = []
         self.gc = False
-        {% for child_cmd in sub_param.child_cmds %}
-        self._{{child_cmd}}: {{child_cmd.title()}} = {{child_cmd.title()}}(root_obj, self)
-        {% endfor %}
-        self.default_value = {% if sub_param.default is string %} "{{sub_param.default}}" {% else %} {{sub_param.default}} {% endif %}
+        
+        self.default_value =  "None" 
         self.value = self.default_value
         self.mark = False
-    {% for child_cmd in sub_param.child_cmds %}
-    def set_{{child_cmd.name}}(self{% if child_cmd.value %}, value=None{% endif %}):
-        self._{{child_cmd.name}}.mark = True
-        self._{{child_cmd.name}}.index = self.cmds.index
-        self.cmds.index += 1
-        self._l.cmds = self.cmds
-        self.next = self._{{child_cmd.name}}
-        self.cmds.CMD_LIST.append(self._{{child_cmd.name}})
-        self._{{child_cmd.name}}.ost_engine()
-        {% if child_cmd.value %}
-        if self._{{child_cmd}}.need_value:
-            self._{{child_cmd}}.value = value
-        {% endif %}
-        return self._{{child_cmd.name}}
-    {% endfor %}
+    
 
 
-{% endfor %}
 
-class {{data.entry_params_meta.mapping_entry.title()}}:
 
-    def __init__(self {% if data.entry_params_meta.mode =="SSH" %} {% for key,value in data.entry_params_meta.ssh_conf.items() %},{{key}}={% if value is string %} "{{value}}" {% else %} {{value}} {% endif %}{% endfor %} {% endif %}):
+class Ls:
+
+    def __init__(self  ,host= "47.97.37.176" ,name= "root" ,pwd= "luo@848257135" ,port= 22 ,sudo= False  ):
         self.cmds: Cmds = Cmds()
         self.pre: object = None
-        self.root: {{data.entry_params_meta.class_name.title()}} = self
-        self.next: Union[{% for sub_param in data.entry_params_meta.child_cmds %}{{sub_param.name.title()}},{% endfor %}] = None
-        self.main_cmd = "{{data.entry_params_meta.entry}}"
+        self.root: Ls = self
+        self.next: Union[L,] = None
+        self.main_cmd = "ls"
         self._mutexs = []
         self._gcs = []
         self._not_mutexs = []
-        self.mode = "{{data.entry_params_meta.mode}}"
-        {% if data.entry_params_meta.mode =="SSH" %}
+        self.mode = "SSH"
+        
         self.ssh_client = SSHClient(host, name, pwd, port)
-        {% else %}
-        self.shell_client = ShellClient()
-        {% endif %}
-        {% for child_cmd in data.entry_params_meta.child_cmds %}
-        self._{{ child_cmd.name }}:{{child_cmd.name.title()}} = {{child_cmd.name.title()}}(self,self)
-        {% endfor %}
-    {% for child_cmd in data.entry_params_meta.child_cmds %}
-    def set_{{child_cmd.name}}(self{% if child_cmd.value %}, value=None{% endif %}):
-        self._{{child_cmd.name}}.mark = True
-        self._{{child_cmd.name}}.index = self.cmds.index
+        
+        
+        self._l:L = L(self,self)
+        
+    
+    def set_l(self):
+        self._l.mark = True
+        self._l.index = self.cmds.index
         self.cmds.index += 1
-        self.next = self._{{child_cmd.name}}
-        self.cmds.CMD_LIST.append(self._{{child_cmd.name}})
+        self.next = self._l
+        self.cmds.CMD_LIST.append(self._l)
 
-        self._{{child_cmd.name}}.ost_engine()
-        {% if child_cmd.value %}
-        if self._{{child_cmd}}.need_value:
-            self._{{child_cmd}}.value = value
-        {% endif %}
-        return self._{{child_cmd.name}}
-    {% endfor %}
+        self._l.ost_engine()
+        
+        return self._l
+    
 
-    {% for child_cmd in data.entry_params_meta.child_cmds %}
-    def {{child_cmd.name}}(self) -> {{child_cmd.name.title()}}:
-        return self._{{child_cmd.name}}
-    {% endfor %}
+    
+    def l(self) -> L:
+        return self._l
+    
 
     def _exclude(self, cmd_obj):
         if not cmd_obj.mark:
@@ -189,7 +168,7 @@ class {{data.entry_params_meta.mapping_entry.title()}}:
                     continue
                 if cmd_obj.mutex:
                     self._mutexs.append(cmd_obj)
-                    logger.debug(f"{self.main_cmd}添加互斥对象：{cmd_obj},最新互斥对象列表：{{self._mutexs}}")
+                    logger.debug(f"{self.main_cmd}添加互斥对象：{cmd_obj},最新互斥对象列表：")
                 else:
                     self._not_mutexs.append(cmd_obj)
                     logger.debug(f"{self.main_cmd}添加非互斥对象：{cmd_obj},最新非互斥对象列表：{self._not_mutexs}")
@@ -206,11 +185,9 @@ class {{data.entry_params_meta.mapping_entry.title()}}:
         logger.info(f"执行命令列表：{[self.main_cmd] + [self._get_execute_cmd(cmd) for cmd in self.cmds.CMD_LIST]}")
         cmd_list = [self.main_cmd] + [self._get_execute_cmd(cmd) for cmd in self.cmds.CMD_LIST]
         cmd = " ".join(cmd_list)
-        {% if data.entry_params_meta.mode =="SSH" %}
+
         return self.ssh_client.run_cmd(cmd)
-        {% else %}
-        return self.shell_client.run_cmd(cmd)
-        {% endif %}
+        
 
 
 
