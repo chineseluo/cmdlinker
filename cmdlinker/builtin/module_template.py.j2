@@ -1,5 +1,6 @@
 from loguru import logger
 from typing import Union
+from cmdlinker.builtin.exception import CmdLinkerMutexException
 
 class Counter:
     index = 0
@@ -90,8 +91,8 @@ class OstCmd:
 class {{sub_param.mapping_name.title()}}(OstCmd):
     def __init__(self, root_obj, pre_obj):
         super().__init__()
-        self.pre: Ost = pre_obj
-        self.root: Ost = root_obj
+        self.pre: {{sub_param.parent_cmd.title()}} = pre_obj
+        self.root: {{sub_param.root_cmd.title()}} = root_obj
         self.next: Union[{{sub_param.mapping_name.title()}}] = self
         self.meta_data = {{sub_param}}
         self.level = 2
@@ -114,7 +115,7 @@ class {{sub_param.mapping_name.title()}}(OstCmd):
         Counter.index += 1
         self.next = self._port
         self._{{child_cmd}}.ost_engine()
-        CMDS.CMD_LIST.append(self._port)
+        CMDS.CMD_LIST.append(self._{{child_cmd}})
         if self._{{child_cmd}}.need_value:
             self._{{child_cmd}}.value = value
             return self._{{child_cmd}}

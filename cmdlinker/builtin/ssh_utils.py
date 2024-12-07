@@ -13,7 +13,7 @@ import datetime
 
 from cmdlinker.builtin import shell_utils
 from loguru import logger
-from cmdlinker.constants import HostInfo
+from cmdlinker.const import HostInfo
 
 default_print_fun = shell_utils.default_print_fun
 

@@ -1,8 +1,9 @@
-from typing import Text
-
-from cmdlinker.builtin.yamlOption import FileOption
-from loguru import logger
+import os.path
 import json
+import time
+from typing import Text
+from cmdlinker.builtin.file_operation import FileOption
+from loguru import logger
 from cmdlinker.model.models import Entry
 from jinja2 import Template
 
@@ -25,7 +26,7 @@ from jinja2 import Template
 
 def check_yaml(file_path: Text):
     yaml_data = FileOption.read_yaml(file_path)
-    logger.info(json.dumps(yaml_data, indent=4))
+    # logger.info(json.dumps(yaml_data, indent=4))
     # yaml文件检查
     logger.info("**" * 20 + f"yaml文件合法性检查" + "**" * 20)
     entry = Entry.parse_raw(json.dumps(yaml_data))
@@ -52,26 +53,34 @@ def analyse_entry(meta_data):
     return entry_meta
 
 
-def analyse_var(params):
+def analyse_var(params, parent_cmd, root_cmd):
     for parameter in params:
         if "parameters" in parameter:
-            analyse_var(parameter["parameters"])
             parameter.update({"has_child_cmd": True})
+            parameter.update({"parent_cmd": parent_cmd})
+            parameter.update({"root_cmd": root_cmd})
             parameter.update({"child_cmds": [parameter["mapping_name"] for parameter in parameter["parameters"]]})
+            # if parameter["mapping_name"] == "run":
+            #     logger.info(parameter)
+            #     time.sleep(30)
+            analyse_var(parameter["parameters"], parameter["mapping_name"], root_cmd)
+
             del parameter["parameters"]
             sub_params_meta.append(parameter)
         else:
             parameter.update({"has_child_cmd": False})
             parameter.update({"child_cmds": []})
+            parameter.update({"parent_cmd": parent_cmd})
+            parameter.update({"root_cmd": root_cmd})
             sub_params_meta.append(parameter)
 
 
-def main(file_path: Text):
+def main(file_path: Text, out_path: Text, module_name: Text, class_name: Text):
     yaml_data = check_yaml(file_path)
     logger.info("==" * 20 + f"生成jinjia2模板渲染对象" + "==" * 20)
     entry_meta = analyse_entry(yaml_data)
     logger.debug(f"解析yaml主命令对象成功：{entry_meta}")
-    analyse_var(yaml_data["parameters"])
+    analyse_var(yaml_data["parameters"], entry_meta["mapping_entry"], entry_meta["mapping_entry"])
     [logger.debug(f"解析yaml子命令对象成功：{parameter}") for parameter in sub_params_meta]
     logger.info("==" * 20 + f"jinjia2模板渲染对象生成成功" + "==" * 20)
 
@@ -81,18 +90,21 @@ def main(file_path: Text):
         "entry_params_meta": entry_meta,
         "sub_params_meta": sub_params_meta
     }
-    with open('E:\开源项目\CmdLinker\cmdlinker\\builtin\module_template.py.j2', 'r', encoding='utf-8') as f:
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    jinja2_template = os.path.join(base_path, "module_template.py.j2")
+    with open(jinja2_template, 'r', encoding='utf-8') as f:
         template = f.read()
     jinja_template = Template(template)
     python_code = jinja_template.render(data=params_meta)
-    module_name = f'config_module.py'
-    with open(module_name, 'w', encoding="utf-8") as f:
-        f.write(python_code)
 
-    # exec(compile(source=open(module_name, encoding="utf-8").read(), filename=module_name, mode='exec'))
-    # logger.info(f"code:{code}")
+    module_name = f'{entry_meta["module_name"] if module_name is None else module_name}.py'
+
+    entry_meta["class_name"] = class_name if class_name is None else class_name
+    out_module_path = os.path.join(out_path, module_name)
+    with open(out_module_path, 'w', encoding="utf-8") as f:
+        f.write(python_code)
     logger.info("==" * 20 + f"生成命令对象成功" + "==" * 20)
 
 
 if __name__ == '__main__':
-    main("E:\开源项目\CmdLinker\Ost.yaml")
+    main("E:\开源项目\CmdLinker\Ost.yaml", "./", None, None)

@@ -3,7 +3,7 @@ parameters:
       param_name: "init"
       type: "str"
       help: "启动CmdLinker生成命令对象文件"
-      default: "None"
+      default:
       func: "init"
       children_cmd:
         - param_name:
@@ -12,8 +12,36 @@ parameters:
             - '--file_path'
           type: "str"
           help: "yaml文件路径"
-          default: ""
+          default:
           dest: "file_path"
+          required: True
+        - param_name:
+            - '-o'
+            - '-out'
+            - '--out_path'
+          type: "str"
+          help: "输出python模块路径，默认为当前目录"
+          default: "./"
+          dest: "out_path"
+          required: False
+        - param_name:
+            - '-m'
+            - '-module'
+            - '--module_name'
+          type: "str"
+          help: "输出python模块名，默认为entry映射的module name"
+          default:
+          dest: "module_name"
+          required: False
+        - param_name:
+            - '-c'
+            - '-class'
+            - '--class_name'
+          type: "str"
+          help: "输入python类名，，默认为entry映射的class name"
+          default:
+          dest: "class_name"
+          required: False
   # 计划操作命令
 #  - parent_cmd:
 #      param_name: "plan_load"

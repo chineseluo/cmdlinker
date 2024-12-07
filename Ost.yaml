@@ -5,7 +5,7 @@ class_name: "ost"
 out_path: "./"
 parameters:
   -   mapping_name: "run"
-      original_cmd: "-run_it"
+      original_cmd: "-run"
       value: True # 是否需要值
       mutex: False # 是否互斥
       default: None

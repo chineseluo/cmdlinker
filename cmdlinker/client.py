@@ -20,10 +20,12 @@ community（QQ）：816489363""")
 
 def init(*args, **kwarg):
     print_authors_info()
-
-    main(args[0].file_path)
-    # logger.info(*args)
-    # logger.info(args[0].file_path)
+    file_path = args[0].file_path
+    out_path = args[0].out_path
+    module_name = args[0].module_name
+    class_name = args[0].class_name
+    main(file_path, out_path, module_name,class_name)
+    logger.info(*args)
 
 
 def init_scaffold_parser(subparsers):
@@ -41,7 +43,8 @@ def init_scaffold_parser(subparsers):
                                                  type=eval(children_cmd_info["type"]), nargs="?",
                                                  help=children_cmd_info["help"],
                                                  default=children_cmd_info["default"],
-                                                 dest=children_cmd_info["dest"])
+                                                 dest=children_cmd_info["dest"],
+                                                 required=children_cmd_info["required"])
             sub_scaffold_parser_list.append(sub_scaffold_parser)
     return sub_scaffold_parser_list
 

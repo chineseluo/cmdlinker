@@ -6,3 +6,9 @@ site
 site.zip
 dist/*
 site/*
+tests/aa.py
+tests/bb.py
+tests/cc.py
+tests/config_module.py
+./Ost.yaml
+cmdlinker/builtin/Ost.py
