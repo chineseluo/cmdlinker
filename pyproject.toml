@@ -2,12 +2,27 @@
 name = "cmdlinker"
 version = "0.1.0"
 description = "用于解析命令/执行命令，将命令解析成py对象，在进行命令操作时，直接操作命令对象即可，可用于命令自动化测试，中间件测试，linux测试，云原生测试，云计算测试等"
+license = "Apache-2.0"
 authors = ["chineseluo <848257135@qq.com>"]
 readme = "README.md"
+keywords = [
+        'automation', 'testing', 'test', 'automated-testing', 'cli', 'command-line', 'shell', 'ssh',
+        'configuration', 'yaml', 'config', 'settings', 'remote-execution', 'remote-command', 'ssh-command',
+        'ci-cd', 'continuous-integration', 'client', 'development-tools', 'dev-tools', 'utility',
+        'sysadmin', 'system-administration', 'commend', 'script-execution', 'shell-script', 'bash-script'
+    ]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 jinja2 = "^3.1.4"
+loguru = "^0.7.3"
+pyyaml = "^6.0.2"
+prettytable = "^3.12.0"
+paramiko = "^3.5.0"
+pyfiglet = "^1.0.2"
+termcolor = "^2.5.0"
+argparse = "^1.4.0"
+pydantic = "^2.10.3"
 
 
 [build-system]
