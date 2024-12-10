@@ -3,7 +3,7 @@ from typing import Union, Text
 from cmdlinker.builtin.exception import CmdLinkerMutexException,CmdLinkerMulMutexException
 from cmdlinker.builtin.ssh_utils import SSHClient
 from cmdlinker.builtin.shell_utils import ShellClient
-{% set entry_params = data.entry_params_meta %}
+
 
 class Cmds:
     def __init__(self):
@@ -112,105 +112,70 @@ class BaseCmd(Runner):
         self._mutexs = []
         self._gcs = []
         self._not_mutexs = []
-        self.main_cmd = "{{entry_params.entry}}"
+        self.main_cmd = "ls"
         self.pre: object = object
         self.root: object = object
         self.next: Union[object] = object
-        {% if entry_params.mode =="SSH" %}self.ssh_client: SSHClient = None{% else %}self.shell_client: ShellClient = None{% endif %}
+        self.ssh_client: SSHClient = None
 
-{% for sub_param in data.sub_params_meta %}
-class {{sub_param.mapping_name.title()}}(BaseCmd):
+
+class L(BaseCmd):
     def __init__(self, root_obj, pre_obj):
         super().__init__()
-        self.pre: {{sub_param.parent_cmd.title()}} = pre_obj
-        self.root: {{sub_param.root_cmd.title()}} = root_obj
-        self.next: Union[{{sub_param.mapping_name.title()}}] = self
-        self.meta_data = {{sub_param}}
+        self.pre: Ls = pre_obj
+        self.root: Ls = root_obj
+        self.next: Union[L] = self
+        self.meta_data = {'mapping_name': 'l', 'original_cmd': '-l', 'value': False, 'mutex': False, 'default': 'None', 'has_child_cmd': False, 'child_cmds': [], 'parent_cmd': 'Ls', 'root_cmd': 'Ls'}
         self.level = 2
-        self.mutex = {{sub_param.mutex}}
-        self.need_value = {{sub_param.value}}
-        self.has_child_cmd = {{sub_param.has_child_cmd}}
-        self.child_cmds = {{sub_param.child_cmds}}
+        self.mutex = False
+        self.need_value = False
+        self.has_child_cmd = False
+        self.child_cmds = []
         self.gc = False
-        {% for child_cmd in sub_param.child_cmds %}self._{{child_cmd}}: {{child_cmd.title()}} = {{child_cmd.title()}}(root_obj, self){% endfor %}
-        self.default_value = {% if sub_param.default is string %}"{{sub_param.default}}"{% else %} {{sub_param.default}} {% endif %}
+        
+        self.default_value = "None"
         self.value = self.default_value
         self.mark = False
-    {% for child_cmd in sub_param.child_cmds %}
-    {% set cmd_name = child_cmd.name %}
-    def _set_{{cmd_name}}(self{% if child_cmd.value %}, value=None{% endif %}):
-        self._{{cmd_name}}.mark = True
-        self._{{cmd_name}}.index = self.cmds.index
-        self.cmds.index += 1
-        {% if entry_params.mode =="SSH" %}
-        self._l.ssh_client = self.ssh_client
-        {% else %}
-        self._l.shell_client = self.shell_client
-        {% endif %}
-        self._{{cmd_name}}.cmds = self.cmds
-        self.next = self._{{cmd_name}}
-        self.cmds.CMD_LIST.append(self._{{cmd_name}})
-        {% if child_cmd.value %}
-        if self._{{child_cmd}}.need_value:
-            self._{{child_cmd}}.value = value
-        {% endif %}
+    
 
-    def tset_{{cmd_name}}(self{% if child_cmd.value %}, value=None{% endif %}):
-        """
-        传递TRANSMIT模式，可以获取子命令对象，可通过，root/pre/next，控制命令对象的根/父/子级
-        """
-        self._set_{{cmd_name}}({% if child_cmd.value %}value=None{% endif %})
-        return self._{{child_cmd.name}}
-    def hset_{{cmd_name}}({% if child_cmd.value %}value=None{% endif %}):
-        """
-        保持HOLD模式，该方法返回该对象本身，不返回子对象
-        """
-        self._set_{{cmd_name}}(self{% if child_cmd.value %}, value=None{% endif %})
-        return self
-    {% endfor %}
-{% endfor %}
-class {{entry_params.mapping_entry.title()}}(Runner):
-    def __init__(self{% if entry_params.mode =="SSH" %}{% for key,value in entry_params.ssh_conf.items() %}, {{key}}={% if value is string %}"{{value}}"{% else %}{{value}}{% endif %}{% endfor %} {% endif %}):
+class Ls(Runner):
+    def __init__(self, host=None, name=None, pwd=None, port="22", timeout="60", sudo=False ):
         super().__init__()
         self.cmds: Cmds = Cmds()
         self.pre: object = None
-        self.root: {{entry_params.class_name.title()}} = self
-        self.next: Union[{% for sub_param in entry_params.child_cmds %}{{sub_param.name.title()}}, {% endfor %}] = None
-        self.main_cmd = "{{entry_params.entry}}"
+        self.root: Ls = self
+        self.next: Union[L, ] = None
+        self.main_cmd = "ls"
         self._mutexs = []
         self._gcs = []
         self._not_mutexs = []
-        self.mode = "{{entry_params.mode}}"
-        {% if entry_params.mode =="SSH" %}self.ssh_client = SSHClient(host, name, pwd, port){% else %}self.shell_client = ShellClient(){% endif %}{% for child_cmd in entry_params.child_cmds %}
-        self._{{ child_cmd.name }}: {{child_cmd.name.title()}} = {{child_cmd.name.title()}}(self, self){% endfor %}{% for child_cmd in entry_params.child_cmds %}
+        self.mode = "SSH"
+        self.ssh_client = SSHClient(host, name, pwd, port)
+        self._l: L = L(self, self)
 
-    def _set_{{child_cmd.name}}(self{% if child_cmd.value %}, value=None{% endif %}):{% set cmd_name = child_cmd.name %}
-        self._{{cmd_name}}.mark = True
-        self._{{cmd_name}}.index = self.cmds.index
+    def _set_l(self):
+        self._l.mark = True
+        self._l.index = self.cmds.index
         self.cmds.index += 1
-        self.next = self._{{cmd_name}}
-        self.cmds.CMD_LIST.append(self._{{cmd_name}})
-        self._{{cmd_name}}.cmds = self.cmds
-        {% if entry_params.mode =="SSH" %}self._{{cmd_name}}.ssh_client = self.ssh_client{% else %}self._{{cmd_name}}.shell_client = self.shell_client{% endif %}
-        {% if child_cmd.value %}
-        if self._{{child_cmd}}.need_value:
-            self._{{child_cmd}}.value = value
-        {% endif %}
-    def tset_{{cmd_name}}(self{% if child_cmd.value %}, value=None{% endif %}):
+        self.next = self._l
+        self.cmds.CMD_LIST.append(self._l)
+        self._l.cmds = self.cmds
+        self._l.ssh_client = self.ssh_client
+        
+    def tset_l(self):
         """
         传递TRANSMIT模式，可以获取子命令对象，可通过，root/pre/next，控制命令对象的根/父/子级
         """
-        self._set_{{cmd_name}}({% if child_cmd.value %}value=None{% endif %})
-        return self._{{child_cmd.name}}
+        self._set_l()
+        return self._l
 
-    def hset_{{cmd_name}}(self,{% if child_cmd.value %}value=None{% endif %}):
+    def hset_l(self,):
         """
         保持HOLD模式，该方法返回该对象本身，不返回子对象
         """
-        self._set_{{cmd_name}}({% if child_cmd.value %}value=None{% endif %})
-        return self{% endfor %}
-    {% for child_cmd in entry_params.child_cmds %}
-    def {{child_cmd.name}}(self) -> {{child_cmd.name.title()}}:
-        return self._{{child_cmd.name}}
-    {% endfor %}
-
+        self._set_l()
+        return self
+    
+    def l(self) -> L:
+        return self._l
+    

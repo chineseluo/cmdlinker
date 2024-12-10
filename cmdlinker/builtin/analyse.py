@@ -41,13 +41,14 @@ sub_params_meta = []
 
 def analyse_entry(meta_data):
     child_cmds = [{"name": parameter["mapping_name"], "value": parameter["value"]} for
-                                             parameter in meta_data["parameters"]]
+                  parameter in meta_data["parameters"]]
     entry_meta = {
         "entry": meta_data["entry"],
-        "mapping_entry": meta_data["mapping_entry"],
-        "module_name": meta_data["module_name"],
-        "class_name": meta_data["class_name"],
-        "out_path": meta_data["out_path"],
+        "mapping_entry": meta_data["mapping_entry"] if meta_data.get("mapping_entry", None) else meta_data[
+            "entry"].title(),
+        "module_name": meta_data["module_name"] if meta_data.get("module_name", None) else meta_data["entry"][:1].lower() + meta_data["entry"][1:],
+        "class_name": meta_data["class_name"] if meta_data.get("class_name", None) else meta_data["entry"].title(),
+        "out_path": meta_data["out_path"] if meta_data.get("out_path", None) else "./",
         "has_child_cmd": False if len(child_cmds) == 0 else True,
         "child_cmds": child_cmds,
         "mode": meta_data["mode"].upper()
@@ -56,11 +57,12 @@ def analyse_entry(meta_data):
     if meta_data["mode"].upper() == "SSH":
         ssh_conf = meta_data.get("ssh_conf", None)
         entry_meta.update({"ssh_conf": {
-            "host": ssh_conf["ssh_host"] if ssh_conf else None,
-            "name": ssh_conf["ssh_name"] if ssh_conf else None,
-            "pwd": ssh_conf["ssh_pwd"] if ssh_conf else "22",
-            "port": ssh_conf["ssh_port"] if ssh_conf else None,
-            "sudo": ssh_conf["sudo"] if ssh_conf else False
+            "host": ssh_conf.get("ssh_host", None) if ssh_conf else None,
+            "name": ssh_conf.get("ssh_name", None) if ssh_conf else None,
+            "pwd": ssh_conf.get("ssh_pwd", None) if ssh_conf else None,
+            "port": ssh_conf.get("ssh_port", "22") if ssh_conf else "22",
+            "timeout": ssh_conf.get("timeout", "60") if ssh_conf else "60",
+            "sudo": ssh_conf.get("sudo", False) if ssh_conf else False
         }})
     return entry_meta
 
@@ -116,4 +118,4 @@ def main(file_path: Text, out_path: Text, module_name: Text, class_name: Text):
 
 
 if __name__ == '__main__':
-    main("E:\开源项目\CmdLinker\Ost.yaml", "./", None, None)
+    main("../../example/free.yaml", "../../example/", None, None)

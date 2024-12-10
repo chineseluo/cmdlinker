@@ -1,0 +1,8 @@
+entry: "ls"
+mode: "SSH"
+parameters:
+  -   mapping_name: "l"
+      original_cmd: "-l"
+      value: False # 是否需要值
+      mutex: False # 是否互斥
+      default: None

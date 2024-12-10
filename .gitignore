@@ -12,3 +12,4 @@ tests/cc.py
 tests/config_module.py
 ./Ost.yaml
 cmdlinker/builtin/Ost.py
+example/Ls.yaml

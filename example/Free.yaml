@@ -1,0 +1,13 @@
+entry: "free" # 主命令
+mode: "SSH"
+parameters:
+  - mapping_name: "b" # 映射命令
+    original_cmd: "-b" # 映射命令
+    value: False # 是否需要值
+    mutex: False # 是否互斥
+    default: None # 命令默认值
+  - mapping_name: "t" # 映射命令
+    original_cmd: "-t" # 原命令
+    value: False # 命令是否需要值
+    mutex: False # 命令之间是否互斥
+    default: None # 命令默认值
