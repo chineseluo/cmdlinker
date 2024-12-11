@@ -72,6 +72,7 @@ community（QQ群）：816489363
 
 简单例子：使用linux的free -b -t 举例
 
+第一步编写命令yaml
 ~~~yaml
 entry: "free" # 主命令
 mode: "SSH"
@@ -86,6 +87,22 @@ parameters:
     value: False # 命令是否需要值
     mutex: False # 命令之间是否互斥
     default: None # 命令默认值
+~~~
+
+第二步，生成yaml
+- 通过命令生成
+- 通过导入`cmdlinker`生成
+
+通过命令生成
+
+~~~
+ cmdlinker init -f .\Ost.yaml
+~~~
+
+通过导入`cmdlinker`生成
+~~~
+from cmdlinker.analyse import generator
+generator("../example/free.yaml")
 ~~~
 
 生成的python对象见example模块下的free.py/Free.yaml文件，会生成两个命令类，入口entry类为Free，子命令类B，子命令T

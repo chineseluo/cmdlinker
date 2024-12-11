@@ -46,7 +46,10 @@ def analyse_entry(meta_data):
         "entry": meta_data["entry"],
         "mapping_entry": meta_data["mapping_entry"] if meta_data.get("mapping_entry", None) else meta_data[
             "entry"].title(),
-        "module_name": meta_data["module_name"] if meta_data.get("module_name", None) else meta_data["entry"][:1].lower() + meta_data["entry"][1:],
+        "module_name": meta_data["module_name"] if meta_data.get("module_name", None) else meta_data["entry"][
+                                                                                           :1].lower() + meta_data[
+                                                                                                             "entry"][
+                                                                                                         1:],
         "class_name": meta_data["class_name"] if meta_data.get("class_name", None) else meta_data["entry"].title(),
         "out_path": meta_data["out_path"] if meta_data.get("out_path", None) else "./",
         "has_child_cmd": False if len(child_cmds) == 0 else True,
@@ -86,7 +89,7 @@ def analyse_var(params, parent_cmd, root_cmd):
             sub_params_meta.append(parameter)
 
 
-def main(file_path: Text, out_path: Text, module_name: Text, class_name: Text):
+def generator(file_path: Text, out_path: Text = "./", module_name: Text = None, class_name: Text = None):
     yaml_data = check_yaml(file_path)
     logger.info("==" * 20 + f"生成jinjia2模板渲染对象" + "==" * 20)
     entry_meta = analyse_entry(yaml_data)
@@ -102,7 +105,7 @@ def main(file_path: Text, out_path: Text, module_name: Text, class_name: Text):
         "sub_params_meta": sub_params_meta
     }
     base_path = os.path.abspath(os.path.dirname(__file__))
-    jinja2_template = os.path.join(base_path, "module_template.py.j2")
+    jinja2_template = os.path.join(base_path,"builtin", "module_template.py.j2")
     with open(jinja2_template, 'r', encoding='utf-8') as f:
         template = f.read()
     jinja_template = Template(template)
@@ -118,4 +121,5 @@ def main(file_path: Text, out_path: Text, module_name: Text, class_name: Text):
 
 
 if __name__ == '__main__':
-    main("../../example/free.yaml", "../../example/", None, None)
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    logger.info(base_path)

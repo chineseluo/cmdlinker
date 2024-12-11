@@ -1,9 +1,8 @@
 import sys
-import os
 import unittest
-from ddt import ddt, data
+from ddt import ddt
 from cmdlinker.client import entry
-
+from cmdlinker.analyse import generator
 
 @ddt
 class TestCmd(unittest.TestCase):
@@ -48,3 +47,6 @@ class TestCmd(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             entry()
         self.assertEqual(cm.exception.code, 0)
+
+    def test_generator(self):
+        generator("../example/free.yaml")

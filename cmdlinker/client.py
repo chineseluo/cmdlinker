@@ -2,7 +2,7 @@ import sys
 import argparse
 from cmdlinker import __version__, __description__
 from cmdlinker.builtin.cmd_conf import CmdLinkerCliConf
-from cmdlinker.builtin.analyse import main
+from cmdlinker.analyse import generator
 from loguru import logger
 from termcolor import colored
 import pyfiglet
@@ -24,7 +24,7 @@ def init(*args, **kwarg):
     out_path = args[0].out_path
     module_name = args[0].module_name
     class_name = args[0].class_name
-    main(file_path, out_path, module_name,class_name)
+    generator(file_path, out_path, module_name, class_name)
     logger.info(*args)
 
 
