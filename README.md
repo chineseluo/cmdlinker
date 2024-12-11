@@ -42,6 +42,34 @@
 
 # **使用方法** #
 
+安装cmdlinker
+~~~
+pip3 install cmdlinker
+~~~
+
+验证安装是否成功
+
+~~~
+cmdlinker -v
+~~~
+出现版本信息，表示你得环境已经支持`cmdlinker`相关命令
+~~~
+PS C:\Users\Dell> cmdlinker -v
+
+  ____               _ _     _       _
+ / ___|_ __ ___   __| | |   (_)_ __ | | _____ _ __
+| |   | '_ ` _ \ / _` | |   | | '_ \| |/ / _ \ '__|
+| |___| | | | | | (_| | |___| | | | |   <  __/ |
+ \____|_| |_| |_|\__,_|_____|_|_| |_|_|\_\___|_|
+
+
+The cmdlinker version is 0.1.1
+repository：https://github.com/chineseluo/cmdlinker
+authors：成都-阿木木<848257135@qq.com>
+community（QQ群）：816489363
+~~~
+
+
 简单例子：使用linux的free -b -t 举例
 
 ~~~yaml

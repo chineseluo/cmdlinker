@@ -4,6 +4,13 @@ module_name: "free"
 class_name: "Free"
 out_path: "./"
 mode: "SSH"
+ssh_conf:
+  sudo: False
+  ssh_host: "47.97.37.176"
+  ssh_name: "root"
+  ssh_pwd: "luo@848257135"
+  ssh_port: 22
+  timeout: 60
 parameters:
   - mapping_name: "b"
     original_cmd: "-b"
