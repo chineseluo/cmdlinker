@@ -8,7 +8,7 @@ ssh_conf:
   sudo: False
   ssh_host: "47.97.37.176"
   ssh_name: "root"
-  ssh_pwd: "luo@848257135"
+  ssh_pwd: "xxx"
   ssh_port: 22
   timeout: 60
 parameters:
