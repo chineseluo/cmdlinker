@@ -55,8 +55,8 @@ def analyse_entry(meta_data):
         "has_child_cmd": False if len(child_cmds) == 0 else True,
         "child_cmds": child_cmds,
         "mode": meta_data["mode"].upper(),
-        "sudo": meta_data["sudo"],
-        "timeout": meta_data["timeout"]
+        "sudo": meta_data.get("sudo", False),
+        "timeout": meta_data.get("timeout", 60)
     }
 
     if meta_data["mode"].upper() == "SSH":
@@ -107,7 +107,7 @@ def generator(file_path: Text, out_path: Text = "./", module_name: Text = None, 
         "sub_params_meta": sub_params_meta
     }
     base_path = os.path.abspath(os.path.dirname(__file__))
-    jinja2_template = os.path.join(base_path,"builtin", "module_template.py.j2")
+    jinja2_template = os.path.join(base_path, "builtin", "module_template.py.j2")
     with open(jinja2_template, 'r', encoding='utf-8') as f:
         template = f.read()
     jinja_template = Template(template)

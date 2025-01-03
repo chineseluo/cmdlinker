@@ -23,6 +23,8 @@ class Runner:
         self.main_cmd: Text = None
         self.cmds: Cmds = None
         self.ssh_client: SSHClient = None
+        self.sudo: bool = False
+        self.timeout: int = 60
 
     def _exclude(self, cmd_obj):
         if not cmd_obj.mark:
@@ -81,15 +83,18 @@ class Runner:
     def runner(self):
         self.cmd_checker()
         cmd = self.exec_cmd()
-        return self.ssh_client.run_cmd(cmd)
+        self.cmds.CMD_LIST = []
+        return self.ssh_client.run_cmd(cmd, timeout=self.timeout)
 
     def collector(self):
         return self.cmds.CMD_LIST.sort(key=lambda cmd_obj: cmd_obj.index)
 
     def exec_cmd(self):
         self.cmds.CMD_LIST.sort(key=lambda cmd_obj: cmd_obj.index)
-        logger.info(f"执行命令列表：{[self.main_cmd] + [self._get_execute_cmd(cmd) for cmd in self.cmds.CMD_LIST]}")
         cmd_list = [self.main_cmd] + [self._get_execute_cmd(cmd) for cmd in self.cmds.CMD_LIST]
+        if self.sudo:
+            cmd_list.insert(0, "sudo")
+        logger.info(f"执行命令列表：{cmd_list}")
         cmd = " ".join(cmd_list)
         return cmd
 
