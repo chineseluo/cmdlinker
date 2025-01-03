@@ -54,7 +54,9 @@ def analyse_entry(meta_data):
         "out_path": meta_data["out_path"] if meta_data.get("out_path", None) else "./",
         "has_child_cmd": False if len(child_cmds) == 0 else True,
         "child_cmds": child_cmds,
-        "mode": meta_data["mode"].upper()
+        "mode": meta_data["mode"].upper(),
+        "sudo": meta_data["sudo"],
+        "timeout": meta_data["timeout"]
     }
 
     if meta_data["mode"].upper() == "SSH":

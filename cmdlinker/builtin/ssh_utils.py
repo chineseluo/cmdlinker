@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+import time
+import json
 import paramiko
 import tempfile
 import datetime
@@ -7,26 +9,12 @@ import sys
 from cmdlinker.builtin import shell_utils
 from loguru import logger
 from cmdlinker.const import HostInfo
+from cmdlinker.builtin.logger_operation import LoggerFormat
 
 
 # default_print_fun = shell_utils.default_print_fun
 def default_print_fun(x):
     print(x, file=sys.stderr)
-
-
-def info_log(host, cmd, status_code, stdout, stderr):
-    def _out_info(message):
-        return f"""
-execute cmd on host:{host}
-execute cmd:{cmd}
-status_code:{status_code}
-response:\n{message}
-        """
-
-    if status_code == 0:
-        logger.info(_out_info(stdout))
-    else:
-        logger.error(_out_info(stderr))
 
 
 class SSHClient(object):
@@ -44,6 +32,12 @@ class SSHClient(object):
     def __repr__(self):
         return f'SSHClient(host={self.host})'
 
+    def _get_host_info(self):
+        return {
+            "hostname": self.host,
+            "username": self.params["username"]
+        }
+
     def check_connect(self):
         '''主要保证构造函数不要抛异常'''
         if self.is_connected:
@@ -53,14 +47,33 @@ class SSHClient(object):
         self.client.connect(**self.params)
         self.is_connected = True
 
-    def run_cmd(self, cmd, timeout=1800):
+    def run_cmd(self, cmd, timeout=60):
+        start_time_stamp = int(time.time() * 1000)
         self.check_connect()
         stdin_fd, stdout_fd, stderr_fd = self.client.exec_command(cmd, timeout=timeout)
         # 会阻塞
         status_code = stdout_fd.channel.recv_exit_status()  # status is 0
         stdout, stderr = stdout_fd.read().decode(self.encoding), stderr_fd.read().decode(self.encoding)
-        info_log(self.host, cmd, status_code, stdout, stderr)
-        return {'status_code': status_code, 'stdout': stdout, 'stderr': stderr}
+        req = {
+        "execute cmd on host": self.host,
+        "execute cmd": cmd,
+        }
+        LoggerFormat.console_output("cmd request", req)
+        end_time_stamp = int(time.time() * 1000)
+        if stdout:
+            try:
+                stdout = json.loads(stdout)
+            except Exception as e:
+                logger.warning("尝试对response stdout进行json转换失败，原样输出")
+        if stderr:
+            try:
+                stderr = json.loads(stderr)
+            except Exception as e:
+                logger.warning("尝试对response stderr进行json转换失败，原样输出")
+        result = {'status_code': status_code, 'execute_time': f'{end_time_stamp - start_time_stamp}ms',
+                  'stdout': stdout, 'stderr': stderr}
+        LoggerFormat.console_output("cmd response", result)
+        return result
 
     def run_cmd_output_console(self, cmd, print_fun=default_print_fun, timeout=36000):
         import datetime

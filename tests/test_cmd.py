@@ -31,7 +31,7 @@ class TestCmd(unittest.TestCase):
         self.assertEqual(cm.exception.code, 0)
 
     def test_init_file(self):
-        sys.argv = ["CmdLinker", "init", "-f", "E:\开源项目\CmdLinker\Ost.yaml"]
+        sys.argv = ["CmdLinker", "init", "-f", "E:\开源项目\CmdLinker\docker.yaml"]
         with self.assertRaises(SystemExit) as cm:
             entry()
         self.assertEqual(cm.exception.code, 0)

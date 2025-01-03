@@ -1,0 +1,24 @@
+entry: "docker"
+mapping_entry: "Docker"
+module_name: "docker"
+class_name: "Docker"
+out_path: "./"
+mode: "SSH"
+sudo: True
+timeout: 20
+parameters:
+  - mapping_name: "ps"
+    original_cmd: "ps"
+    value: False # 是否需要值
+    mutex: False # 是否互斥
+    default: None
+  - mapping_name: "inspect"
+    original_cmd: "inspect"
+    value: True # 是否需要值
+    mutex: False # 是否互斥
+    default: None
+  - mapping_name: "format"
+    original_cmd: "--format"
+    value: True # 是否需要值
+    mutex: False # 是否互斥
+    default: None
